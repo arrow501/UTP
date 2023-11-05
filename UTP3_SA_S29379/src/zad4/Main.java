@@ -9,7 +9,7 @@ package zad4;
 
 import java.util.*;
 
-// Plik Main.java może być dowolnie modyfikowany, 
+// Plik Main.java może być dowolnie modyfikowany,
 // ale punkty uzyskuje się za właściwe dzialanie poszczególnych pokazanych tu metod klasy XList.
 
 // Jeżeli nie oprogramujemy wszystkich metod, to z klasy Main nalezy usunąć te fragmenty,
@@ -45,7 +45,7 @@ public class Main {
     System.out.println(slist2);
     System.out.println(slist3);
 
-    // Metoda union - suma elementów 
+    // Metoda union - suma elementów
     List<Integer> m1 = list1.union(list2);  // oczywiście, można podstawiać na List
     System.out.println(m1);
     // można wykonywać wszystkie operacje z interfejsu List, np:
@@ -63,7 +63,7 @@ public class Main {
     System.out.println(m3.diff(set));  // wszystko z m3, co nie jest w set
     System.out.println(XList.of(set).diff(m3)); // co jest w set, czego nie ma w m3
 
-    // Metoda unique -zwraca nową Xlist bez duplikatow   
+    // Metoda unique -zwraca nową Xlist bez duplikatow
     XList<Integer> uniq = m3.unique(); // lista, nie Set
     System.out.println(uniq);
 
@@ -83,13 +83,13 @@ public class Main {
     System.out.println(j2.join(" "));
 
     // forEachWithIndex
-    XList<Integer> lmod = XList.of(1,2,8, 10, 11, 30, 3, 4);  
+    XList<Integer> lmod = XList.of(1,2,8, 10, 11, 30, 3, 4);
     lmod.forEachWithIndex( (e, i) -> lmod.set(i, e*2));
     System.out.println(lmod);
     lmod.forEachWithIndex( (e, i) -> { if (i % 2 == 0) lmod.remove(e); } );
     System.out.println(lmod);
     lmod.forEachWithIndex( (e, i) -> { if (i % 2 == 0) lmod.remove(i); } );
-    System.out.println(lmod); // Pytanie: dlaczego mamy taki efekt? 
+    System.out.println(lmod); // Pytanie: dlaczego mamy taki efekt?
 
   }
 }

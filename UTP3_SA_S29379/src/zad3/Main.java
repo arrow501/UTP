@@ -8,7 +8,7 @@ package zad3;
 
 
 import javax.swing.*;
-// zadanie: spowodować, by po naciśnięciu klawisza myszki na przycisku, 
+// zadanie: spowodować, by po naciśnięciu klawisza myszki na przycisku,
 // na konsoli zostało wypisane "ok". Plik Main.java jest niemodyfikowalny.
 public class Main {
 
