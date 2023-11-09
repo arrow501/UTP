@@ -92,6 +92,26 @@ class XList<T> extends ArrayList<T> {
         }
     }
 
+    // Metoda combine - kombinacje elementów
+    public XList<XList<T>> combine() {
+        XList<XList<T>> result = new XList<XList<T>>();
+        if (this.isEmpty()) {
+            result.add(new XList<T>());
+            return result;
+        }
+        XList<T> first = (XList<T>) this.get(0);
+        XList<XList<T>> rest = new XList<XList<T>>(this.subList(1, this.size())).combine();
+        for (T t : first) {
+            for (XList<T> list : rest) {
+                XList<T> temp = new XList<T>();
+                temp.add(t);
+                temp.addAll(list);
+                result.add(temp);
+            }
+        }
+        return result;
+    }
+
     // Interfejs funkcyjny do metody forEachWithIndex
     @FunctionalInterface
     interface BiConsumer<T, U> {
