@@ -23,16 +23,16 @@ public class CustomersPurchaseSortFind {
 
     /**
      * Reads the data from a file and adds them to a private list for later use
-     * @param fname the name of the file
+     * @param filePath the name of the file
      */
-    public void readFile(String fname) {
-        try (Stream<String> lines = Files.lines(Paths.get(fname))) {
+    public void readFile(String filePath) {
+        try (Stream<String> lines = Files.lines(Paths.get(filePath))) {
             lines.map(line -> {
                 String[] fields = line.split(";");
                 return new Purchase(fields[0], fields[1], fields[2], Double.parseDouble(fields[3]), Double.parseDouble(fields[4]));
             }).forEach(purchases::add);
         } catch (IOException e) {
-            System.out.println("File not found: " + fname);
+            System.out.println("File not found: " + filePath);
         }
     }
 
