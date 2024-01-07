@@ -11,7 +11,7 @@ import java.util.stream.Collectors;
 public class DataReader {
 
 
-    static List<Offer> loadData(File dataDir){
+    static List<Offer> getOffers (File dataDir){
         File[] files = dataDir.listFiles();
         List<Offer> offers = new ArrayList<>();
 
@@ -23,8 +23,11 @@ public class DataReader {
                 try {
                     offers.addAll(readFile(file));
                 } catch (FileNotFoundException e) {
+                    // it should never happen
                     e.printStackTrace();
                 }
+            } else if (file.isDirectory()) {
+                offers.addAll(getOffers(file));
             }
         }
         return offers;
@@ -33,11 +36,7 @@ public class DataReader {
     static List<Offer> readFile(File file) throws FileNotFoundException {
         BufferedReader br = new BufferedReader(new FileReader(file));
 
-        List<Offer> offers = br.lines().map(line -> {
-            String[] data = line.split("\t");
-            return new Offer(data[0], data[1], data[2], data[3], data[4], data[5], data[6]);
-        }).collect(Collectors.toList());
-
+        List<Offer> offers = br.lines().map(Offer::new).collect(Collectors.toList());
 
         return offers;
     }
