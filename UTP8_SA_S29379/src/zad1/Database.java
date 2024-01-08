@@ -8,12 +8,20 @@ import java.awt.*;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
+import java.text.DateFormat;
+import java.text.NumberFormat;
+import java.text.SimpleDateFormat;
+import java.util.Locale;
+import java.util.MissingResourceException;
+import java.util.ResourceBundle;
 import java.util.Vector;
 
 public class Database {
     private Connection connection;
     private TravelData travelData;
+    private Locale locale = Locale.getDefault();
 
+    private JFrame frame;
     /**
      * Constructor for Database.
      *
@@ -133,28 +141,54 @@ public class Database {
     }
 
 
-
     public void showGui() {
-        JFrame frame = new JFrame("Offers");
-        frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+        if (frame == null) {
+            frame = new JFrame("Offers");
+            frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+        } else {
+            frame.getContentPane().removeAll();
+        }
 
-        String[] columnNames = {"Locale", "Country Code", "Date From", "Date To", "Place", "Price", "Currency"};
+        // Load the ColumnNames resource bundle for the current locale
+        ResourceBundle columnNamesBundle;
+        try {
+            columnNamesBundle = ResourceBundle.getBundle("ColumnNames", locale);
+        } catch (MissingResourceException e) {
+            locale = Locale.ENGLISH;
+            columnNamesBundle = ResourceBundle.getBundle("ColumnNames", locale);
+        }
+        String[] columnNames = {
+                columnNamesBundle.getString("Country"),
+                columnNamesBundle.getString("DateFrom"),
+                columnNamesBundle.getString("DateTo"),
+                columnNamesBundle.getString("Place"),
+                columnNamesBundle.getString("Price")
+        };
+
+        // Create a number format for the locale
+        NumberFormat numberFormat = Localize.getNumberFormat(locale);
+        // Create a date format for the locale
+        DateFormat dateFormat = DateFormat.getDateInstance(DateFormat.SHORT, locale);
+        // Create a resource bundle for the locale
+        ResourceBundle places = ResourceBundle.getBundle("Places", locale);
 
         DefaultTableModel tableModel = new DefaultTableModel(columnNames, 0);
+
+        // Get the system locale
 
         String sql = "SELECT * FROM offers";
         try (Statement stmt = connection.createStatement();
              ResultSet rs = stmt.executeQuery(sql)) {
 
+
+
             while (rs.next()) {
                 Vector<String> row = new Vector<>();
-                row.add(rs.getString("locale"));
-                row.add(rs.getString("countryCode"));
-                row.add(rs.getString("dateFrom"));
-                row.add(rs.getString("dateTo"));
-                row.add(rs.getString("place"));
-                row.add(Double.toString(rs.getDouble("price")));
-                row.add(rs.getString("currency"));
+                row.add(Localize.getCountryName(rs.getString("countryCode"), locale));
+                row.add(Localize.formatDate(rs.getString("dateFrom"), (SimpleDateFormat) dateFormat));
+                row.add(Localize.formatDate(rs.getString("dateTo"), (SimpleDateFormat) dateFormat));
+                row.add(places.getString(rs.getString("place")));
+                row.add(numberFormat.format(rs.getDouble("price")) + " " + rs.getString("currency"));
                 tableModel.addRow(row);
             }
         } catch (SQLException e) {
@@ -163,9 +197,44 @@ public class Database {
 
         JTable table = new JTable(tableModel);
         JScrollPane scrollPane = new JScrollPane(table);
+        frame.setJMenuBar(createLanguageBar());
         frame.add(scrollPane, BorderLayout.CENTER);
         frame.pack();
         frame.setVisible(true);
     }
+private JMenuBar createLanguageBar() {
+    JMenuBar menuBar = new JMenuBar();
+    JMenu menu = new JMenu("Language");
+    menuBar.add(menu);
+
+    JMenuItem menuItem = new JMenuItem("English");
+    menuItem.addActionListener(e -> {
+        locale = Locale.ENGLISH;
+        frame.getContentPane().removeAll();
+        frame.repaint();
+        showGui();
+    });
+    menu.add(menuItem);
+
+    menuItem = new JMenuItem("Polish");
+    menuItem.addActionListener(e -> {
+        locale = new Locale("pl", "PL");
+        frame.getContentPane().removeAll();
+        frame.repaint();
+        showGui();
+    });
+    menu.add(menuItem);
+
+    menuItem = new JMenuItem("German");
+    menuItem.addActionListener(e -> {
+        locale = Locale.GERMANY;
+        frame.getContentPane().removeAll();
+        frame.repaint();
+        showGui();
+    });
+    menu.add(menuItem);
+
+    return menuBar;
+}
 
 }
