@@ -4,8 +4,6 @@ import java.text.NumberFormat;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.Locale;
-import java.util.ResourceBundle;
-
 public class Localize {
 
     static final SimpleDateFormat defaultDateFormat = new SimpleDateFormat("yyyy-MM-dd");
