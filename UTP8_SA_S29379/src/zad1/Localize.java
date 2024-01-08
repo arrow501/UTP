@@ -49,7 +49,8 @@ public class Localize {
         try {
             return displayFormat.format(defaultDateFormat.parse(date));
         } catch (ParseException e) {
-            return "Invalid date";
+            System.err.println("Invalid date: " + date);
+            throw new RuntimeException(e);
         }
     }
 

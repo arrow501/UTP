@@ -1,33 +1,43 @@
 package zad1;
 
-import java.sql.*;
-
 import javax.swing.*;
 import javax.swing.table.DefaultTableModel;
 import java.awt.*;
-import java.sql.ResultSet;
-import java.sql.SQLException;
-import java.sql.Statement;
+import java.sql.*;
 import java.text.DateFormat;
 import java.text.NumberFormat;
 import java.text.SimpleDateFormat;
-import java.util.Locale;
-import java.util.MissingResourceException;
-import java.util.ResourceBundle;
-import java.util.Vector;
+import java.util.*;
 
+/**
+ * This class represents a database for storing and retrieving travel offers.
+ * It provides methods for creating the database, adding offers to the database,
+ * and displaying the offers in a GUI.
+ */
 public class Database {
     private Connection connection;
-    private TravelData travelData;
+    private final TravelData travelData;
     private Locale locale = Locale.getDefault();
-
     private JFrame frame;
+
+
     /**
-     * Constructor for Database.
+     * Constructs a new Database object.
      *
-     * @param url URL of the SQLite database.
+     * @param url         the URL of the database
+     * @param travelData  the travel data to be stored in the database
      */
-    public Database(String url) {
+    public Database(String url, TravelData travelData) {
+        this.travelData = travelData;
+        initializeDatabase(url);
+    }
+
+    /**
+     * Initializes the database by creating a new table if it does not exist.
+     *
+     * @param url the URL of the database
+     */
+    private void initializeDatabase(String url) {
         try {
             Class.forName("org.sqlite.JDBC");
             connection = DriverManager.getConnection("jdbc:sqlite:" + url);
@@ -45,102 +55,54 @@ public class Database {
                     ")";
             Statement stmt = connection.createStatement();
             stmt.execute(sql);
-        } catch (Exception e) {
-            throw new RuntimeException("Failed to create database", e);
+        } catch (ClassNotFoundException e) {
+            System.err.println("The SQLite JDBC driver was not found.");
+            e.printStackTrace();
+            throw new RuntimeException(e);
+        } catch (SQLException e) {
+            System.err.println("An error occurred while executing the SQL statement.");
+            System.err.println("SQLState: " + e.getSQLState());
+            System.err.println("Error Message: " + e.getMessage());
+            System.err.println("Vendor Error Code: " + e.getErrorCode());
+            throw new RuntimeException(e);
         }
     }
 
     /**
-     * Adds an offer to the database.
-     *
-     * @param offer Offer to add.
+     * Adds all offers from the travel data to the database.
      */
-    public void addOffer(Offer offer) {
-        String sql = "INSERT OR IGNORE INTO offers(locale, countryCode, dateFrom, dateTo, place, price, currency) VALUES(?,?,?,?,?,?,?)";
-
-        try (PreparedStatement pstmt = connection.prepareStatement(sql)) {
-            pstmt.setString(1, offer.locale.toString());
-            pstmt.setString(2, offer.countryCode);
-            pstmt.setString(3, offer.dateFrom);
-            pstmt.setString(4, offer.dateTo);
-            pstmt.setString(5, offer.place);
-            pstmt.setDouble(6, offer.price);
-            pstmt.setString(7, offer.currency);
-            pstmt.executeUpdate();
-        } catch (SQLException e) {
-            System.out.println(e.getMessage());
-        }
-    }
-
-    public Database(String url, TravelData travelData) {
-        this(url);
-        this.travelData = travelData;
-    }
-
     public void create() {
         for (Offer offer : travelData.getOffers()) {
-            addOffer(offer);
+            addOfferToDatabase(offer);
         }
     }
 
+    /**
+     * Adds a single offer to the database.
+     *
+     * @param offer the offer to be added
+     */
+    private void addOfferToDatabase(Offer offer) {
+        String sql = "INSERT OR IGNORE INTO offers(locale, countryCode, dateFrom, dateTo, place, price, currency) VALUES(?,?,?,?,?,?,?)";
 
-    public void testDatabase() {
-
-        // Create a test offer
-        Offer testOffer = new Offer("en_US\tUnited States\t2022-01-01\t2022-01-31\tlake\t1000.0\tUSD");
-
-        // Check if the test offer already exists in the database
-        String checkSql = "SELECT COUNT(*) FROM offers WHERE locale = ? AND countryCode = ? AND dateFrom = ? AND dateTo = ? AND place = ? AND price = ? AND currency = ?";
-
-        try (PreparedStatement pstmt = connection.prepareStatement(checkSql)) {
-            pstmt.setString(1, testOffer.locale.toString());
-            pstmt.setString(2, testOffer.countryCode);
-            pstmt.setString(3, testOffer.dateFrom);
-            pstmt.setString(4, testOffer.dateTo);
-            pstmt.setString(5, testOffer.place);
-            pstmt.setDouble(6, testOffer.price);
-            pstmt.setString(7, testOffer.currency);
-
-            ResultSet rs = pstmt.executeQuery();
-            if (rs.next() && rs.getInt(1) > 0) {
-                // The test offer already exists in the database, so we don't insert it
-                System.out.println("The test offer already exists in the database.");
-            } else {
-                // The test offer does not exist in the database, so we insert it
-                addOffer(testOffer);
-                System.out.println("The test offer has been added to the database.");
-            }
+        try (PreparedStatement statement = connection.prepareStatement(sql)) {
+            statement.setString(1, offer.locale.toString());
+            statement.setString(2, offer.countryCode);
+            statement.setString(3, offer.dateFrom);
+            statement.setString(4, offer.dateTo);
+            statement.setString(5, offer.place);
+            statement.setDouble(6, offer.price);
+            statement.setString(7, offer.currency);
+            statement.executeUpdate();
         } catch (SQLException e) {
-            System.out.println(e.getMessage());
-        }
-
-
-        // Retrieve the test offer from the database
-        String sql = "SELECT * FROM offers WHERE place = 'lake'";
-
-        try (
-                Statement stmt = connection.createStatement();
-                ResultSet rs = stmt.executeQuery(sql)) {
-
-            // Loop through the result set
-            while (rs.next()) {
-                System.out.println("no error");
-                System.out.println(rs.getString("locale") + "\t" +
-                        rs.getString("countryCode") + "\t" +
-                        rs.getString("dateFrom") + "\t" +
-                        rs.getString("dateTo") + "\t" +
-                        rs.getString("place") + "\t" +
-                        rs.getDouble("price") + "\t" +
-                        rs.getString("currency"));
-            }
-        } catch (
-                SQLException e) {
-            System.out.println("error");
-            System.out.println(e.getMessage());
+            System.err.println("Failed to add offer to database: " + e.getMessage());
+            throw new RuntimeException(e);
         }
     }
 
-
+    /**
+     * Displays the GUI for viewing the offers in the database.
+     */
     public void showGui() {
         if (frame == null) {
             frame = new JFrame("Offers");
@@ -149,7 +111,13 @@ public class Database {
             frame.getContentPane().removeAll();
         }
 
-        // Load the ColumnNames resource bundle for the current locale
+        createGui();
+    }
+
+    /**
+     * Creates the GUI for viewing the offers in the database.
+     */
+    private void createGui() {
         ResourceBundle columnNamesBundle;
         try {
             columnNamesBundle = ResourceBundle.getBundle("ColumnNames", locale);
@@ -157,6 +125,7 @@ public class Database {
             locale = Locale.ENGLISH;
             columnNamesBundle = ResourceBundle.getBundle("ColumnNames", locale);
         }
+
         String[] columnNames = {
                 columnNamesBundle.getString("Country"),
                 columnNamesBundle.getString("DateFrom"),
@@ -165,22 +134,15 @@ public class Database {
                 columnNamesBundle.getString("Price")
         };
 
-        // Create a number format for the locale
-        NumberFormat numberFormat = Localize.getNumberFormat(locale);
-        // Create a date format for the locale
-        DateFormat dateFormat = DateFormat.getDateInstance(DateFormat.SHORT, locale);
-        // Create a resource bundle for the locale
-        ResourceBundle places = ResourceBundle.getBundle("Places", locale);
-
         DefaultTableModel tableModel = new DefaultTableModel(columnNames, 0);
-
-        // Get the system locale
 
         String sql = "SELECT * FROM offers";
         try (Statement stmt = connection.createStatement();
              ResultSet rs = stmt.executeQuery(sql)) {
 
-
+            NumberFormat numberFormat = Localize.getNumberFormat(locale);
+            DateFormat dateFormat = DateFormat.getDateInstance(DateFormat.SHORT, locale);
+            ResourceBundle places = ResourceBundle.getBundle("Places", locale);
 
             while (rs.next()) {
                 Vector<String> row = new Vector<>();
@@ -192,7 +154,15 @@ public class Database {
                 tableModel.addRow(row);
             }
         } catch (SQLException e) {
-            e.printStackTrace();
+            // Log the error message and SQL state
+            System.err.println("SQL error message: " + e.getMessage());
+            System.err.println("SQL state: " + e.getSQLState());
+
+            // Display a user-friendly message
+            JOptionPane.showMessageDialog(frame, "An error occurred while retrieving data from the database.", "Database Error", JOptionPane.ERROR_MESSAGE);
+
+            // Exit the program
+            throw new RuntimeException(e);
         }
 
         JTable table = new JTable(tableModel);
@@ -202,39 +172,46 @@ public class Database {
         frame.pack();
         frame.setVisible(true);
     }
-private JMenuBar createLanguageBar() {
-    JMenuBar menuBar = new JMenuBar();
-    JMenu menu = new JMenu("Language");
-    menuBar.add(menu);
 
-    JMenuItem menuItem = new JMenuItem("English");
-    menuItem.addActionListener(e -> {
-        locale = Locale.ENGLISH;
+    /**
+     * Creates a language bar for changing the display language of the GUI.
+     *
+     * @return the language bar
+     */
+    private JMenuBar createLanguageBar() {
+        JMenuBar menuBar = new JMenuBar();
+        JMenu menu = new JMenu("Language");
+        menuBar.add(menu);
+
+        createMenuItem(menu, "English", Locale.ENGLISH);
+        createMenuItem(menu, "Polish", new Locale("pl", "PL"));
+        createMenuItem(menu, "German", Locale.GERMANY);
+
+        return menuBar;
+    }
+
+    /**
+     * Creates a menu item for a specific language.
+     *
+     * @param menu     the menu to which the item will be added
+     * @param language the language of the menu item
+     * @param locale   the locale corresponding to the language
+     */
+    private void createMenuItem(JMenu menu, String language, Locale locale) {
+        JMenuItem menuItem = new JMenuItem(language);
+        menuItem.addActionListener(e -> handleLocaleChange(locale));
+        menu.add(menuItem);
+    }
+
+    /**
+     * Handles a change in the display language.
+     *
+     * @param newLocale the new locale
+     */
+    private void handleLocaleChange(Locale newLocale) {
+        this.locale = newLocale;
         frame.getContentPane().removeAll();
         frame.repaint();
-        showGui();
-    });
-    menu.add(menuItem);
-
-    menuItem = new JMenuItem("Polish");
-    menuItem.addActionListener(e -> {
-        locale = new Locale("pl", "PL");
-        frame.getContentPane().removeAll();
-        frame.repaint();
-        showGui();
-    });
-    menu.add(menuItem);
-
-    menuItem = new JMenuItem("German");
-    menuItem.addActionListener(e -> {
-        locale = Locale.GERMANY;
-        frame.getContentPane().removeAll();
-        frame.repaint();
-        showGui();
-    });
-    menu.add(menuItem);
-
-    return menuBar;
-}
-
+        createGui();
+    }
 }
