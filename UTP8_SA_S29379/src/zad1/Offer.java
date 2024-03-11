@@ -26,6 +26,10 @@ public class Offer {
     public Offer(String offerString) {
         String[] data = offerString.split("\t");
 
+        if(data.length != 7) {
+            throw new IllegalArgumentException("Invalid offer: " + offerString);
+        }
+
         this.locale = getLocale(data[0]);
         this.countryCode = getCountryCode(data[1], this.locale);
         this.dateFrom = data[2];

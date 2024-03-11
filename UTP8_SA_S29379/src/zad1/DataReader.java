@@ -52,7 +52,9 @@ public class DataReader {
      */
     private static List<Offer> readOffersFromFile(File file) {
         try (BufferedReader br = new BufferedReader(new FileReader(file))) {
-            return br.lines().map(Offer::new).collect(Collectors.toList());
+            return br.lines()
+                    .map(Offer::new)
+                    .collect(Collectors.toList());
         } catch (FileNotFoundException e) {
             throw new RuntimeException("File not found: " + file.getAbsolutePath(), e);
         } catch (IOException e) {

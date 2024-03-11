@@ -21,6 +21,10 @@ public class Localize {
         } else {
             return new Locale(localeParts[0]);
         }
+        // what does this do?
+        // "pl_PL" -> new Locale("pl", "PL")
+        // OR
+        // "pl" -> new Locale("pl")
     }
 
     /**
